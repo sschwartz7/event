@@ -64,7 +64,12 @@ const events = [{
 ];
 
 function getEvents() {
-    return events;
+    let storedEvents = JSON.parse(localStorage.getItem("ss-events")|| '[]');
+    if (storedEvents.length == 0) {
+        storedEvents = events;
+        localStorage.setItem('ss-events', JSON.stringify(events));
+    }
+    return storedEvents;
 }
 
 function buildDropdown() {
@@ -76,6 +81,7 @@ function buildDropdown() {
 
     const dropdownDiv = document.getElementById('city-dropdown');
     const dropdownTemplate = document.getElementById('dropdown-template');
+    dropdownDiv.innerHTML = "";
 
     dropdownChoices.forEach(choice => {
         let dropdownItemCopy = dropdownTemplate.content.cloneNode(true);
@@ -83,6 +89,7 @@ function buildDropdown() {
         aTag.innerText = choice;
         dropdownDiv.appendChild(dropdownItemCopy);
     });
+    document.getElementById("stats-location").textContent = "All";
     displayEvents(currentEvents);
     displayStats(currentEvents);
 }
@@ -104,8 +111,8 @@ function displayEvents(events) {
         tableRow.querySelector('[data-id="event"]').innerText = event.event;
         tableRow.querySelector('[data-id="city"]').innerText = event.city;
         tableRow.querySelector('[data-id="state"]').innerText = event.state;
-        tableRow.querySelector('[data-id="attendance"]').innerText = event.attendance;
-        tableRow.querySelector('[data-id="date"]').innerText = event.date;
+        tableRow.querySelector('[data-id="attendance"]').innerText = event.attendance.toLocaleString();
+        tableRow.querySelector('[data-id="date"]').innerText =new Date(event.date).toLocaleDateString();
         //insert the event data into the table
         eventsTable.appendChild(tableRow);
 
@@ -132,4 +139,42 @@ function displayStats(events) {
     document.getElementById('average').innerHTML = Math.round(avg).toLocaleString();
     document.getElementById('min').innerText = low.toLocaleString();
     document.getElementById('max').innerText = high.toLocaleString();
+}
+
+function filterEvents(dropdownItemClicked) {
+    let cityName = dropdownItemClicked.innerText;
+    let allEvents = getEvents();
+    let filtered = [];
+    document.getElementById("stats-location").textContent = cityName;
+    filtered = allEvents.filter(event => cityName == 'All' || event.city == cityName); //"cityName == All" only runs if cityName is not all
+    displayStats(filtered);
+    displayEvents(filtered);
+}
+
+function addEvent() {
+
+    let stateSelect = document.getElementById("State");
+    let selectedIndex = stateSelect.selectedIndex;
+    let selectedStateText = stateSelect.options[selectedIndex];
+
+    let dateString = document.getElementById("eventDate").value;
+    dateString = `${dateString} 00:00`;
+    let eventDate = new Date(dateString).toLocaleDateString();
+
+    let newEvent = {
+        event: document.getElementById("eventName").value,
+        city: document.getElementById("city").value,
+        state: selectedStateText.text,
+        attendance: parseInt(document.getElementById("Attendance").value),
+        date: eventDate,
+    };
+
+    let allEvents = getEvents();
+    allEvents.push(newEvent);
+    localStorage.setItem("ss-events", JSON.stringify(allEvents));
+
+    document.getElementById('newEventForm').reset();
+
+    buildDropdown();
+
 }

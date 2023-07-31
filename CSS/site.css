@@ -44,6 +44,8 @@ footer {
     --bs-btn-border-color: var(--ss-theme-600);
     --bs-btn-hover-bg: var(--ss-theme-accent);
     --bs-btn-hover-border-color: var(--ss-theme-accent);
+    --bs-btn-active-bg: var(--ss-theme-accent);
+    --bs-btn-active-border-color :var(--ss-theme-accent);
 }
 
 .navbar,
