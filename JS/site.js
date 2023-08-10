@@ -177,4 +177,6 @@ function addEvent() {
 
     buildDropdown();
 
+    let modal = bootstrap.Modal.getInstance(document.getElementById('addEvent'))
+    modal.hide();
 }

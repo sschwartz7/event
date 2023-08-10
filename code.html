@@ -65,25 +65,230 @@
             <div class="col-lg-8">
                 <pre class="line-numbers">
                     <code class="language-js">
-                        function displayMessage(){
-                            let inputBox= document.getElementById('message');
-                            let message= inputBox.value;
+                        const events = [{
+                            event: "ComicCon",
+                            city: "New York",
+                            state: "New York",
+                            attendance: 240000,
+                            date: "06/01/2017",
+                        },
+                        {
+                            event: "ComicCon",
+                            city: "New York",
+                            state: "New York",
+                            attendance: 250000,
+                            date: "06/01/2018",
+                        },
+                        {
+                            event: "ComicCon",
+                            city: "New York",
+                            state: "New York",
+                            attendance: 257000,
+                            date: "06/01/2019",
+                        },
+                        {
+                            event: "ComicCon",
+                            city: "San Diego",
+                            state: "California",
+                            attendance: 130000,
+                            date: "06/01/2017",
+                        },
+                        {
+                            event: "ComicCon",
+                            city: "San Diego",
+                            state: "California",
+                            attendance: 140000,
+                            date: "06/01/2018",
+                        },
+                        {
+                            event: "ComicCon",
+                            city: "San Diego",
+                            state: "California",
+                            attendance: 150000,
+                            date: "06/01/2019",
+                        },
+                        {
+                            event: "HeroesCon",
+                            city: "Charlotte",
+                            state: "North Carolina",
+                            attendance: 40000,
+                            date: "06/01/2017",
+                        },
+                        {
+                            event: "HeroesCon",
+                            city: "Charlotte",
+                            state: "North Carolina",
+                            attendance: 45000,
+                            date: "06/01/2018",
+                        },
+                        {
+                            event: "HeroesCon",
+                            city: "Charlotte",
+                            state: "North Carolina",
+                            attendance: 50000,
+                            date: "06/01/2019",
+                        },
+                        ];
                         
-                            Swal.fire(
-                                {
-                                    backdrop: false,
-                                    title: 'Events',
-                                    text: message
-                                }
-                              );
+                        function getEvents() {
+                            let storedEvents = JSON.parse(localStorage.getItem("ss-events")|| '[]');
+                            if (storedEvents.length == 0) {
+                                storedEvents = events;
+                                localStorage.setItem('ss-events', JSON.stringify(events));
+                            }
+                            return storedEvents;
                         }
+                        
+                        function buildDropdown() {
+                            let currentEvents = getEvents();
+                        
+                            let eventCities = currentEvents.map(event => event.city);
+                            let distinctCities = new Set(eventCities);//chooses unique cities
+                            let dropdownChoices = ['All', ...distinctCities];
+                        
+                            const dropdownDiv = document.getElementById('city-dropdown');
+                            const dropdownTemplate = document.getElementById('dropdown-template');
+                            dropdownDiv.innerHTML = "";
+                        
+                            dropdownChoices.forEach(choice => {
+                                let dropdownItemCopy = dropdownTemplate.content.cloneNode(true);
+                                let aTag = dropdownItemCopy.querySelector('a')
+                                aTag.innerText = choice;
+                                dropdownDiv.appendChild(dropdownItemCopy);
+                            });
+                            document.getElementById("stats-location").textContent = "All";
+                            displayEvents(currentEvents);
+                            displayStats(currentEvents);
+                        }
+                        
+                        function displayEvents(events) {
+
+                            const eventsTable = document.getElementById('events-table');
+
+                            const eventTemplate = document.getElementById('table-row-template');
+
+                            eventsTable.innerHTML = '';
+                        
+                            for (let index = 0; index < events.length; index++) {
+
+                                let event = events[index];
+
+                                let tableRow = eventTemplate.content.cloneNode(true);
+
+                                tableRow.querySelector('[data-id="event"]').innerText = event.event;
+                                tableRow.querySelector('[data-id="city"]').innerText = event.city;
+                                tableRow.querySelector('[data-id="state"]').innerText = event.state;
+                                tableRow.querySelector('[data-id="attendance"]').innerText = event.attendance.toLocaleString();
+                                tableRow.querySelector('[data-id="date"]').innerText =new Date(event.date).toLocaleDateString();
+
+                                eventsTable.appendChild(tableRow);
+                        
+                            }
+                        }
+                        
+                        function displayStats(events) {
+                            let total = 0;
+                            let high = 0;
+                            let low = events[0].attendance;
+                            for (let x = 0; x < events.length; x++) {
+                                let event = events[x];
+                                total += event.attendance;
+                                if (event.attendance < low) {
+                                    low = event.attendance;
+                                }
+                                if (event.attendance > high) {
+                                    high = event.attendance;
+                                }
+                            }
+                            document.getElementById('total').innerHTML = total.toLocaleString();
+                            let avg = total / events.length;
+                            document.getElementById('average').innerHTML = Math.round(avg).toLocaleString();
+                            document.getElementById('min').innerText = low.toLocaleString();
+                            document.getElementById('max').innerText = high.toLocaleString();
+                        }
+                        
+                        function filterEvents(dropdownItemClicked) {
+                            let cityName = dropdownItemClicked.innerText;
+                            let allEvents = getEvents();
+                            let filtered = [];
+                            document.getElementById("stats-location").textContent = cityName;
+                            filtered = allEvents.filter(event => cityName == 'All' || event.city == cityName);
+                            displayStats(filtered);
+                            displayEvents(filtered);
+                        }
+                        
+                        function addEvent() {
+                        
+                            let stateSelect = document.getElementById("State");
+                            let selectedIndex = stateSelect.selectedIndex;
+                            let selectedStateText = stateSelect.options[selectedIndex];
+                        
+                            let dateString = document.getElementById("eventDate").value;
+                            dateString = `${dateString} 00:00`;
+                            let eventDate = new Date(dateString).toLocaleDateString();
+                        
+                            let newEvent = {
+                                event: document.getElementById("eventName").value,
+                                city: document.getElementById("city").value,
+                                state: selectedStateText.text,
+                                attendance: parseInt(document.getElementById("Attendance").value),
+                                date: eventDate,
+                            };
+                        
+                            let allEvents = getEvents();
+                            allEvents.push(newEvent);
+                            localStorage.setItem("ss-events", JSON.stringify(allEvents));
+                        
+                            document.getElementById('newEventForm').reset();
+                        
+                            buildDropdown();
+                            let modal = bootstrap.Modal.getInstance(document.getElementById('addEvent'))
+                            modal.hide();
+                        }
+                        
                     </code>
                 </pre>
             </div>
             <div class="col-lg-4">
-                <p>There is one function</p>
-                <h5>displayMessage</h5>
-                <p>Shows a SweetAlert with the value of the <code>message</code> varialebe</p>
+                <p>The code is made up of multiple functions in order to take in an array of objects and display them on
+                    the page. The const events variable is used to populate the local storage.</p>
+                <p>The getEvents fucntion parses the stored events from JSON format, and if there are no events
+                    stored, it initializes the local storage with a default set of events. It then returns the array of
+                    events.
+                </p>
+                <p>
+                    The buildDropdown function builds a dropdown list of cities based on the events data. It first gets
+                    the current
+                    events using getEvents(). It then extracts the cities from the events and creates a set of unique
+                    city names. The dropdown is populated with "All" (as the first option) and the distinct city names.
+                    Finally, the function also sets the text content of an element with ID "stats-location" to "All",
+                    and calls displayEvents() and displayStats() functions with the current events data.
+                </p>
+                <p>
+                    The displayEvents function displays events in a table. It takes an array of events as input, clears
+                    the table content, and then iterates through each event in the array. For each event, it clones a
+                    table row template, fills in the relevant event details (event name, city, state, attendance, and
+                    date), and appends the row to the table.
+                </p>
+                <p>
+                    The displayStats function calculates and displays statistics related to events. It takes an array of
+                    events as input and calculates the total attendance, average attendance, minimum attendance, and
+                    maximum attendance among the events. It then sets the text content of elements with specific IDs to
+                    display these statistics.
+                </p>
+                <p>
+                    The fliterEvents function filters events based on the selected city from the dropdown. It takes the
+                    clicked dropdown item as input and retrieves the corresponding city name. It then gets all the
+                    events using getEvents(), filters the events based on the selected city (or shows all events if
+                    "All" is selected), and then calls displayStats() and displayEvents() to display the filtered data.
+                </p>
+                <p>
+                    The addEvent function adds a new event to the list of events. It retrieves the values from various
+                    input fields (event name, city, state, attendance, and date), creates a new event object, and
+                    appends it to the existing events data. It then saves the updated events data to local storage,
+                    resets the form, rebuilds the city dropdown, and hides the modal window.
+                </p>
+
             </div>
         </div>
     </main>
